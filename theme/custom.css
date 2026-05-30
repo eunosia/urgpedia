@@ -311,14 +311,17 @@ html body .v-application .contents-header {
   border-bottom: none !important;
   box-shadow: none !important;
 }
-/* Squeeze the headings column to content width */
-html body .v-application .page-col-content.is-page-header,
+/* Align the headline with the content column below.
+   Outer flex item must stay col-lg-9/col-xl-10 — don't shrink it with
+   `flex: 0 1 780px` (that kills the 9/12 width and centers the whole
+   block in the viewport, so the headline loses its left-offset vs the
+   content column). Only the INNER `.page-header-headings` gets the
+   780px clamp + `margin: 0 auto`, matching `.contents` positioning. */
 html body .v-application .page-header-headings {
   max-width: 780px !important;
-  flex: 0 1 780px !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  padding-left: 20px !important;
+  padding-left: 0 !important;
   padding-right: 20px !important;
 }
 html body .v-application .page-header-headings .headline {
@@ -474,16 +477,40 @@ aside .v-card__text {
   font-size: 14px !important;
 }
 
-/* Tag chips in aside — flat, outlined */
-.page-col-sd .v-chip,
-aside .v-chip {
-  background-color: transparent !important;
-  border: 1px solid #e1e4e8 !important;
+/* Tag chips — Wiki.js renders them with Vuetify helpers `.teal.lighten-5`
+   (bg) + `.teal--text.text--darken-2` (text) + `.teal--text` (icon).
+   Override all three helpers to brand-blue tint. Scope kept global so
+   it catches chips outside `aside` (Wiki.js wraps them in `.pa-5`). */
+html body .v-application .v-chip.teal.lighten-5,
+html body .v-application a.v-chip.teal.lighten-5,
+html body .v-application .page-col-sd .v-chip,
+html body .v-application aside .v-chip {
+  background-color: rgba(4, 72, 142, 0.08) !important;
+  border: 1px solid rgba(4, 72, 142, 0.25) !important;
   border-radius: 4px !important;
   height: 26px !important;
   font-size: 13px !important;
-  color: #1a2332 !important;
+  color: #04488e !important;
   box-shadow: none !important;
+}
+html body .v-application .v-chip.teal.lighten-5:hover,
+html body .v-application a.v-chip.teal.lighten-5:hover,
+html body .v-application .page-col-sd .v-chip:hover,
+html body .v-application aside .v-chip:hover {
+  background-color: rgba(4, 72, 142, 0.14) !important;
+  border-color: rgba(4, 72, 142, 0.4) !important;
+}
+/* Text + icon inside chip — override `.teal--text` / `.text--darken-2` */
+html body .v-application .v-chip .v-chip__content,
+html body .v-application .v-chip .v-chip__content .teal--text,
+html body .v-application .v-chip .v-chip__content .teal--text.text--darken-2,
+html body .v-application .v-chip .v-chip__content .v-icon.teal--text {
+  color: #04488e !important;
+}
+
+/* "Etiquetas" overline — Wiki.js uses `.teal--text` helper */
+html body .v-application .overline.teal--text {
+  color: #04488e !important;
 }
 
 /* ─── Links ──────────────────────────────────────────── */
@@ -532,13 +559,27 @@ a:hover {
   font-weight: 600;
 }
 
-/* ─── Blockquote ─────────────────────────────────────── */
-.contents blockquote {
-  color: #656d76;
-  border-left: 4px solid #d0d7de;
-  padding: 0 1em;
-  margin: 1em 0;
+/* ─── Blockquote — shade institucional ───────────────── */
+/* Wiki.js default (`.v-main .contents blockquote`, specificity 0,0,2,1)
+   paints a 55px teal-gray bar + white MDI quote pseudo. Outrank it with
+   `html body .v-application .v-main .contents blockquote` = 0,0,3,3
+   and kill the decorative pseudo. */
+html body .v-application .v-main .contents blockquote,
+html body .v-application .contents blockquote {
+  color: #3d4a5c !important;
+  background-color: rgba(4, 72, 142, 0.05) !important;
+  border-left: 4px solid #04488e !important;
+  border-radius: 0 4px 4px 0 !important;
+  padding: 0.6em 1em !important;
+  margin: 1em 0 !important;
+  position: relative;
 }
+html body .v-application .v-main .contents blockquote::before,
+html body .v-application .contents blockquote::before {
+  content: none !important;
+  display: none !important;
+}
+html body .v-application .contents blockquote p { color: inherit !important; }
 
 /* ─── Buttons — brand kept only for .primary actions ─── */
 .v-btn--contained.primary,
@@ -560,7 +601,10 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover { background-color: #8b949e; }
 
 /* ─── Footer — minimal ───────────────────────────────── */
-.nav-footer {
+/* "Con la tecnología de Wiki.js" + trailing pipe are stripped by
+   inject-head.html (data-urgpedia-footer-strip). CSS here only styles. */
+html body .v-application footer.v-footer,
+html body .v-application footer.v-footer.grey.lighten-3 {
   background-color: #ffffff !important;
   border-top: 1px solid #e1e4e8 !important;
   color: #57606a !important;
@@ -610,6 +654,14 @@ html body .v-application .v-btn.v-btn--fab.blue-grey:hover {
     padding-bottom: 14px !important;
   }
   .contents { font-size: 16px; padding: 0 16px; }
+
+  /* Nav drawer — 78% de la pantalla (Vuetify default queda muy angosto) */
+  html body .v-application .v-navigation-drawer,
+  html body .v-application nav.v-navigation-drawer {
+    width: 78vw !important;
+    max-width: 360px !important;
+    min-width: 280px !important;
+  }
 
   /* Topbar — tighter, fit more title */
   html body .v-application .nav-header .v-toolbar__content,

@@ -18,6 +18,44 @@
   }
 })();
 </script>
+<script data-urgpedia-footer-strip>
+(function () {
+  // Wiki.js footer renders two spans inside `.v-footer .caption`:
+  //   [1] "© {year} {company}. Todos los derechos reservados. |&nbsp;"
+  //   [2] "Con la tecnología de <a>Wiki.js</a>"
+  // We want to keep Wiki.js's auto-interpolated year in [1] but drop the
+  // trailing " | " and remove [2] entirely. CSS can't strip a span's
+  // trailing text; DOM mutation can.
+  function stripFooterBranding() {
+    var caption = document.querySelector('.v-footer .caption');
+    if (!caption) return false;
+    var spans = caption.querySelectorAll(':scope > span');
+    if (spans.length < 2) return false;
+    spans[1].remove();
+    var first = spans[0];
+    // Remove trailing " |&nbsp;" / " | " from the last text node
+    var last = first.lastChild;
+    if (last && last.nodeType === 3) {
+      last.nodeValue = last.nodeValue.replace(/\s*\|\s* ?\s*$/, '');
+    }
+    return true;
+  }
+  function init() {
+    if (stripFooterBranding()) return;
+    // Footer renders after route mount — retry via observer
+    var obs = new MutationObserver(function () {
+      if (stripFooterBranding()) obs.disconnect();
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+    setTimeout(function () { obs.disconnect(); }, 10000);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 <script data-urgpedia-accordion-v4>
 (function () {
   // Wiki.js sidebar: `.wk-hdr` rows flip `.wk-open` on their `.wk-chv`
