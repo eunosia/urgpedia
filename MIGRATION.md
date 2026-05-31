@@ -40,9 +40,9 @@ Wiki.js ya exporta el contenido a Markdown vía Git Storage; ese repo
 |---|---|---|
 | `<!-- TITLE: ... -->` / frontmatter propio | `title:` | Obligatorio. |
 | descripción | `description:` | Recomendado (SEO + buscador). |
-| orden por prefijo `§N` en el título | `sidebar.order:` (número) | Decidir si el `§N` se conserva visible en el título o se mueve a `order`. |
+| orden por prefijo `§N` en el título | `sidebar.order:` (número) | **Decidido:** el `§N` NO se conserva en el título visible; el orden pasa a `sidebar.order`. Ver §2.6. |
 | `lastmod` | `lastUpdated:` o derivado de git | Starlight puede tomarlo de git. |
-| tags (entidad en DB, routing `/t/`) | — | Starlight docs no tiene tags nativos; ver preguntas abiertas. |
+| tags (entidad en DB, routing `/t/`) | `tags:` (array) | **Decidido:** se conservan como `tags` en frontmatter; descubrimiento por "Índice por tema". Ver §2.6. |
 
 Ejemplo de frontmatter de destino:
 
@@ -52,6 +52,10 @@ title: Cetoacidosis diabética (DKA)
 description: Manejo en urgencias de la cetoacidosis diabética del adulto.
 sidebar:
   order: 1
+tags:
+  - endocrino-metabólico
+  - adulto
+  - calculadora
 ---
 ```
 
@@ -107,13 +111,48 @@ Patrón validado con el piloto DKA:
 
 ---
 
+## 2.6 Decisiones de diseño (preguntas abiertas resueltas)
+
+Resueltas con DKA y shock séptico a la vista; aplican a todo el portado.
+
+### Orden de las páginas
+
+- **Agrupación**: por **estructura de carpetas**. La carpeta de sección define
+  el grupo del sidebar (autogenerate en `astro.config.mjs`); las subcarpetas
+  definen subgrupos. No se usa el `§N` para agrupar.
+- **Orden dentro de un grupo**: por **`sidebar.order`** (entero) en el
+  frontmatter. Menor = más arriba.
+- **Título visible**: **sin** el prefijo `§N`. El número del manual Wiki.js
+  (`§1`, `§2`, …) se traslada a `sidebar.order`; el título queda limpio (mejor
+  para el buscador y la lectura). Ejemplo: `§3 RCP` → `title: RCP` +
+  `sidebar.order: 3`.
+
+### Tags / categorías
+
+Starlight docs no trae tags nativos, pero el esquema de contenido del sitio se
+extendió con `blogSchema`, por lo que las páginas aceptan `tags:` en frontmatter.
+
+- **Cómo se agrupan**: cada protocolo declara `tags:` con un **vocabulario
+  controlado**. Dos ejes:
+  - **Área clínica**: `endocrino-metabólico`, `infeccioso`, `cardiovascular`,
+    `neurológico`, `respiratorio`, …
+  - **Transversales**: `shock`, `procedimiento`, `calculadora`, `adulto`,
+    `pediátrico`, `tiempo-dependiente`, …
+- **Cómo se descubren**: página **"Índice por tema"** en `/temas/`
+  (`src/components/TagIndex.astro` + `src/content/docs/temas.mdx`), que lee la
+  colección de docs y lista los protocolos agrupados por tag. Más el buscador
+  (Pagefind indexa los tags). El sidebar sigue siendo por sección; los tags son
+  un eje de descubrimiento ortogonal.
+- **Descartado**: el routing combinable de Wiki.js (`/t/a/b/c`, páginas con
+  todos los tags). Se anota como posible mejora futura si se necesita filtrado
+  multi-tag; por ahora el índice por tema cubre el descubrimiento.
+
+---
+
 ## 3. Preguntas abiertas
 
-- **Tags / routing `/t/`**: Wiki.js tenía tags con páginas combinadas
-  (`/t/a/b/c`). Starlight docs no trae tags nativos. Opciones: plugin de tags,
-  reemplazar por estructura de carpetas, o descartar. Decidir.
-- **`§N` en títulos**: ¿se conserva el prefijo visible o se traslada a
-  `sidebar.order`? Afecta el aspecto del título y del buscador.
+> Tags y orden de páginas quedaron **resueltos** en §2.6.
+
 - **Estructura del repo de contenido**: confirmar si los `.md` están en la raíz
   o en una subcarpeta (`CONTENT_SUBDIR` en `content-sync.sh`) y si conservan el
   prefijo de locale `/es/`.
