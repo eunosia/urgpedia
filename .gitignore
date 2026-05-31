@@ -20,6 +20,11 @@ Thumbs.db
 # Node (si se usa para desarrollo local)
 node_modules/
 
+# Astro / Starlight (artefactos de build)
+dist/
+.astro/
+.env.production
+
 # Backups locales
 backups/
 *.sql
