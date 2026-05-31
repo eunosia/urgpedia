@@ -34,6 +34,8 @@ dist/
 !/src/content/docs/**/
 !/src/content/docs/index.mdx
 !/src/content/docs/**/.gitkeep
+# El blog de Novedades es del sitio (no contenido sincronizado): se versiona.
+!/src/content/docs/blog/**
 
 # Backups locales
 backups/

@@ -52,6 +52,7 @@ rsync -a --delete \
   --exclude '.git' \
   --exclude 'index.mdx' \
   --exclude '.gitkeep' \
+  --exclude 'blog' \
   "${CACHE_DIR}/${CONTENT_SUBDIR}/" "${DEST}/"
 
 echo "[content:sync] listo"

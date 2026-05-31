@@ -1,0 +1,41 @@
+---
+title: Novedades — convención de severidad (entrada de ejemplo)
+date: 2026-05-31
+excerpt: Cómo se publican las novedades de protocolos y cómo distinguir un ajuste menor de un cambio de práctica.
+tags:
+  - cambio de práctica — leer antes del turno
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Esta es una entrada de ejemplo del blog de **Novedades**. Aquí se publican los
+cambios de los protocolos clínicos. Cada entrada queda como registro permanente
+y alimenta el feed RSS del sitio.
+
+## Convención de severidad
+
+Cada novedad se clasifica con una **etiqueta** que indica si exige lectura
+previa al turno:
+
+| Etiqueta | Significado | Acción esperada |
+|---|---|---|
+| `cambio menor` | Corrección de redacción, formato, enlaces o aclaración que **no** altera la conducta clínica. | Informativo. |
+| `cambio de práctica — leer antes del turno` | Modifica una conducta clínica: dosis, criterios, flujo o umbral de decisión. | **Lectura obligatoria antes del próximo turno.** |
+
+<Aside type="caution" title="Cambio de práctica">
+Cuando una novedad lleva la etiqueta `cambio de práctica — leer antes del turno`,
+el mantenedor retiene el merge del PR de contenido y avisa al equipo antes de
+publicar. El PR sin mergear funciona como _staging_; el merge a `main` es el
+acto de publicar.
+</Aside>
+
+## Cómo se publica una novedad
+
+1. El cambio del protocolo entra como PR en el repositorio de contenido.
+2. El mantenedor revisa (compuerta de revisión clínica) y, al mergear a `main`,
+   se publica el sitio.
+3. La entrada de Novedades acompaña al cambio y deja el registro permanente,
+   complementando el aviso puntual al canal del equipo.
+
+> Entrada de ejemplo: reemplazar por novedades reales al poner el sitio en
+> producción.

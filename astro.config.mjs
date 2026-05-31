@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightBlog from 'starlight-blog';
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,6 +11,14 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'URGpedia',
+			// Blog de "Novedades": registro permanente de cambios de protocolo,
+			// con RSS. La convención de severidad por etiqueta se documenta en
+			// la primera entrada y en MIGRATION.md.
+			plugins: [
+				starlightBlog({
+					title: 'Novedades',
+				}),
+			],
 			// Español como único idioma actual, pero con estructura de "locale
 			// raíz": las URL quedan limpias (sin prefijo /es/) y agregar otro
 			// idioma luego es solo añadir una entrada a `locales`.
