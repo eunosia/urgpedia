@@ -1,0 +1,68 @@
+/*
+ * calculator.css — Shell visual común de las calculadoras clínicas.
+ *
+ * Lo comparten todas las calculadoras (DKA, shock séptico, …) para no duplicar
+ * estilos. La LÓGICA CLÍNICA (campos y fórmulas) vive en cada componente, no
+ * aquí: así cada calculadora se revisa de forma aislada. Ver MIGRATION.md §2.5.
+ *
+ * Severidad genérica por `data-level`: cada calculadora mapea su categoría
+ * clínica a high | mid | low.
+ */
+.calc {
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.5rem;
+	padding: 1rem;
+	margin: 1.5rem 0;
+}
+.calc-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 0.75rem;
+}
+.calc-grid label {
+	display: flex;
+	flex-direction: column;
+	font-size: var(--sl-text-sm);
+	font-weight: 600;
+	gap: 0.25rem;
+}
+.calc-grid label span {
+	font-weight: 400;
+	color: var(--sl-color-gray-3);
+}
+.calc-grid input,
+.calc-grid select {
+	padding: 0.4rem 0.5rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.375rem;
+	background: var(--sl-color-black);
+	color: var(--sl-color-white);
+	font: inherit;
+}
+.calc-out {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 0.5rem 1rem;
+	margin: 1rem 0 0;
+}
+.calc-out div {
+	border-top: 1px solid var(--sl-color-gray-6);
+	padding-top: 0.5rem;
+}
+.calc-out dt {
+	font-size: var(--sl-text-xs);
+	color: var(--sl-color-gray-3);
+}
+.calc-out dd {
+	margin: 0;
+	font-size: var(--sl-text-lg);
+	font-weight: 600;
+}
+.calc-out dd[data-level='high'] { color: var(--sl-color-red-high); }
+.calc-out dd[data-level='mid'] { color: var(--sl-color-orange-high); }
+.calc-out dd[data-level='low'] { color: var(--sl-color-green-high); }
+.calc-note {
+	font-size: var(--sl-text-xs);
+	color: var(--sl-color-gray-3);
+	margin: 0.75rem 0 0;
+}
