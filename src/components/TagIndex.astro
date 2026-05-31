@@ -1,0 +1,73 @@
+---
+/**
+ * TagIndex — Índice de protocolos agrupados por etiqueta (tag).
+ *
+ * Lee la colección de docs en build y agrupa por `tags` del frontmatter.
+ * Es el mecanismo de descubrimiento por tema (ver MIGRATION.md §2.6). El
+ * sidebar agrupa por sección; esto da un eje ortogonal por etiqueta.
+ *
+ * En un clon en frío (solo andamiaje) no hay protocolos con tags y se muestra
+ * un aviso; tras `content:sync` aparecen los protocolos reales.
+ */
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('docs');
+
+// Solo protocolos con tags: se excluyen el blog, la portada y esta misma página.
+const protocols = all.filter(
+	(e) =>
+		!e.id.startsWith('blog/') &&
+		e.id !== 'index' &&
+		e.id !== 'temas' &&
+		Array.isArray(e.data.tags) &&
+		e.data.tags.length > 0,
+);
+
+const byTag = new Map<string, typeof protocols>();
+for (const e of protocols) {
+	for (const tag of e.data.tags ?? []) {
+		const list = byTag.get(tag) ?? [];
+		list.push(e);
+		byTag.set(tag, list);
+	}
+}
+
+const tags = [...byTag.keys()].sort((a, b) => a.localeCompare(b, 'es'));
+
+// Slug ASCII para los anchors de cada tag. NFD + quitar todo lo no-ASCII
+// (marcas de acento) antes de colapsar a guiones.
+const slug = (s: string) =>
+	s
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[^\x00-\x7f]/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+---
+
+{
+	tags.length === 0 ? (
+		<p>
+			Aún no hay protocolos con etiquetas. Aparecerán aquí tras ejecutar{' '}
+			<code>content:sync</code>.
+		</p>
+	) : (
+		<div>
+			{tags.map((tag) => (
+				<section>
+					<h2 id={slug(tag)}>{tag}</h2>
+					<ul>
+						{byTag
+							.get(tag)!
+							.sort((a, b) => a.data.title.localeCompare(b.data.title, 'es'))
+							.map((e) => (
+								<li>
+									<a href={`/${e.id}/`}>{e.data.title}</a>
+								</li>
+							))}
+					</ul>
+				</section>
+			))}
+		</div>
+	)
+}

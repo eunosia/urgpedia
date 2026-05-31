@@ -34,6 +34,7 @@ export default defineConfig({
 			// dentro de cada grupo se controla con `sidebar.order` en el
 			// frontmatter de cada página (ver MIGRATION.md).
 			sidebar: [
+				{ label: 'Índice por tema', link: '/temas/' },
 				{ label: 'Introducción', collapsed: true, items: [{ autogenerate: { directory: 'introduccion' } }] },
 				{ label: 'El Servicio', collapsed: true, items: [{ autogenerate: { directory: 'el-servicio' } }] },
 				{ label: 'Interconsultores', collapsed: true, items: [{ autogenerate: { directory: 'interconsultores' } }] },
