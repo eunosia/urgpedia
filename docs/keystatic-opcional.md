@@ -52,7 +52,7 @@ export default config({
   storage: {
     kind: 'cloud',
     // Repo de CONTENIDO, no el del sitio.
-    repo: 'eunosia/urgpedia-caspm-content', // verificar owner/nombre
+    repo: 'eunosia/urgpedia-caspm-content', // repo de contenido (owner confirmado)
     branchPrefix: 'keystatic/',             // nunca escribe en main directo
   },
   cloud: { project: 'urgpedia/contenido' }, // verificar slug del proyecto cloud
@@ -62,7 +62,7 @@ export default config({
 });
 ```
 
-> Owner/nombre del repo y slug del proyecto cloud: **verificar** al configurar.
+> Slug del proyecto cloud: **verificar** al configurar.
 
 ---
 

@@ -203,7 +203,7 @@ Wiki.js Git Storage module sincroniza el contenido del wiki (páginas, assets) c
 
 | Parámetro | Valor |
 |---|---|
-| Repo | `git@github.com:nicoveraz/urgpedia-caspm-content.git` (privado) |
+| Repo | `git@github.com:eunosia/urgpedia-caspm-content.git` (privado) |
 | Rama | `main` |
 | Modo | Sync (bidireccional) |
 | Auth | SSH deploy key con write access (ID `149191083`) |

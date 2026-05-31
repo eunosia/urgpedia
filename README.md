@@ -115,8 +115,8 @@ Color primario: `#04488e`.
 ## Inicio rápido (desarrollo local)
 
 ```bash
-git clone https://github.com/nicoveraz/manual-urgencia-andes-salud.git
-cd manual-urgencia-andes-salud
+git clone https://github.com/eunosia/urgpedia.git
+cd urgpedia
 cp .env.example .env
 # Editar .env con credenciales
 docker compose up -d
@@ -226,7 +226,7 @@ El contenido del wiki se sincroniza bidireccionalmente con un repo privado en Gi
 
 | Parámetro | Valor |
 |---|---|
-| Repo | `git@github.com:nicoveraz/urgpedia-caspm-content.git` (privado) |
+| Repo | `git@github.com:eunosia/urgpedia-caspm-content.git` (privado) |
 | Auth | SSH deploy key con write access (ID `149191083`) |
 | Llave privada (servidor) | `/srv/wiki-git/id_ed25519` |
 | Modo | Sync (bidireccional) |

@@ -14,8 +14,8 @@
 # script.
 #
 # Variables de entorno (con valores por defecto):
-#   CONTENT_REPO    URL del repo de contenido. VERIFICAR la URL/credenciales
-#                   reales antes de usar (el repo es privado).
+#   CONTENT_REPO    URL del repo de contenido (privado; el build necesita
+#                   credenciales de lectura). Por defecto eunosia/urgpedia-caspm-content.
 #   CONTENT_BRANCH  Rama a traer (por defecto: main).
 #   CONTENT_SUBDIR  Subcarpeta del repo de contenido que contiene los .md
 #                   (por defecto: ".", la raíz). Ajustar si el contenido vive
