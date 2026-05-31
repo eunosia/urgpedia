@@ -1,0 +1,115 @@
+---
+/**
+ * SepsisCalculator — Calculadora de apoyo para shock séptico / sepsis.
+ *
+ * Segundo protocolo portado. Reutiliza el shell común `calculator.css`; su
+ * lógica clínica es propia y explícita. Se embebe en una página de contenido:
+ *
+ *   import SepsisCalculator from '@/components/calculators/SepsisCalculator.astro';
+ *   <SepsisCalculator />
+ *
+ * ⚠️ PILOTO — VALIDACIÓN CLÍNICA PENDIENTE: los criterios qSOFA (Sepsis-3), la
+ * fórmula de PAM y, sobre todo, la DOSIS de bolo de cristaloides (30 mL/kg, de
+ * referencia Surviving Sepsis) DEBEN ser validados por el mantenedor contra el
+ * protocolo local antes de publicar. No asumir que son correctos.
+ */
+import './calculator.css';
+---
+
+<div class="calc not-content" data-calc="sepsis">
+	<form class="calc-grid" novalidate>
+		<label>
+			Frecuencia respiratoria <span>(rpm)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="fr" />
+		</label>
+		<label>
+			PA sistólica <span>(mmHg)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="pas" />
+		</label>
+		<label>
+			PA diastólica <span>(mmHg)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="pad" />
+		</label>
+		<label>
+			Estado mental alterado <span>(Glasgow &lt; 15)</span>
+			<select data-f="mental">
+				<option value="">—</option>
+				<option value="0">No</option>
+				<option value="1">Sí</option>
+			</select>
+		</label>
+		<label>
+			Peso <span>(kg)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="peso" />
+		</label>
+	</form>
+
+	<dl class="calc-out">
+		<div><dt>PAM</dt><dd data-o="pam">—</dd></div>
+		<div><dt>qSOFA (0–3)</dt><dd data-o="qsofa">—</dd></div>
+		<div><dt>Bolo cristaloides (30 mL/kg)</dt><dd data-o="bolo">—</dd></div>
+	</dl>
+
+	<p class="calc-note">
+		Herramienta de apoyo a la decisión, no reemplaza el juicio clínico. qSOFA
+		(Sepsis-3) y dosis de referencia (Surviving Sepsis); verificar contra el
+		protocolo local.
+	</p>
+</div>
+
+<script>
+	// Lógica cliente. Se cablea cada instancia de sepsis en la página por separado.
+	function initSepsis(root: HTMLElement) {
+		const field = (n: string) =>
+			root.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-f="${n}"]`);
+		const out = (n: string) =>
+			root.querySelector<HTMLElement>(`[data-o="${n}"]`);
+
+		const num = (el: HTMLInputElement | HTMLSelectElement | null) => {
+			const v = el ? parseFloat(el.value) : NaN;
+			return Number.isFinite(v) ? v : null;
+		};
+		const fmt = (v: number, d = 1) =>
+			v.toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+		function recompute() {
+			const fr = num(field('fr'));
+			const pas = num(field('pas'));
+			const pad = num(field('pad'));
+			const mental = num(field('mental')); // 1 = alterado, 0 = normal
+			const peso = num(field('peso'));
+
+			// PAM (presión arterial media): (PAS + 2*PAD) / 3
+			const pamEl = out('pam');
+			if (pamEl)
+				pamEl.textContent =
+					pas !== null && pad !== null ? `${fmt((pas + 2 * pad) / 3)} mmHg` : '—';
+
+			// qSOFA (Sepsis-3): +1 FR>=22, +1 PAS<=100, +1 estado mental alterado.
+			// Se calcula solo cuando los tres criterios están disponibles.
+			const qEl = out('qsofa');
+			if (qEl) {
+				if (fr !== null && pas !== null && mental !== null) {
+					const score = (fr >= 22 ? 1 : 0) + (pas <= 100 ? 1 : 0) + (mental >= 1 ? 1 : 0);
+					qEl.textContent = String(score);
+					// ≥2 alto riesgo; 1 intermedio; 0 bajo.
+					qEl.setAttribute('data-level', score >= 2 ? 'high' : score === 1 ? 'mid' : 'low');
+				} else {
+					qEl.textContent = '—';
+					qEl.removeAttribute('data-level');
+				}
+			}
+
+			// Bolo inicial de cristaloides: peso * 30 mL/kg
+			const boloEl = out('bolo');
+			if (boloEl)
+				boloEl.textContent = peso !== null ? `${fmt(peso * 30, 0)} mL` : '—';
+		}
+
+		root.addEventListener('input', recompute);
+		root.addEventListener('change', recompute);
+		recompute();
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-calc="sepsis"]').forEach(initSepsis);
+</script>
