@@ -1,0 +1,186 @@
+---
+/**
+ * DkaCalculator — Calculadora de apoyo para cetoacidosis diabética (DKA).
+ *
+ * Componente reutilizable (vive en el repo del SITIO). Patrón de referencia
+ * para portar las calculadoras del manual a Starlight: markup + lógica en un
+ * único componente Astro, sin framework, con un <script> que corre en el
+ * cliente. Se embebe en una página de contenido con:
+ *
+ *   import DkaCalculator from '@/components/calculators/DkaCalculator.astro';
+ *   <DkaCalculator />
+ *
+ * PILOTO: fórmulas estándar de referencia (ADA). Requiere validación clínica
+ * y verificación contra el protocolo local antes de uso en producción.
+ */
+---
+
+<div class="dka-calc not-content" data-dka>
+	<form class="dka-grid" novalidate>
+		<label>
+			Glucosa <span>(mg/dL)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="glucosa" />
+		</label>
+		<label>
+			pH venoso
+			<input type="number" inputmode="decimal" step="any" min="6" max="8" data-f="ph" />
+		</label>
+		<label>
+			Bicarbonato HCO₃⁻ <span>(mEq/L)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="hco3" />
+		</label>
+		<label>
+			Sodio Na⁺ <span>(mEq/L)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="na" />
+		</label>
+		<label>
+			Cloro Cl⁻ <span>(mEq/L)</span>
+			<input type="number" inputmode="decimal" step="any" min="0" data-f="cl" />
+		</label>
+	</form>
+
+	<dl class="dka-out">
+		<div><dt>Sodio corregido</dt><dd data-o="naCorr">—</dd></div>
+		<div><dt>Anion gap</dt><dd data-o="ag">—</dd></div>
+		<div><dt>Osmolalidad efectiva</dt><dd data-o="osm">—</dd></div>
+		<div><dt>Severidad (ADA)</dt><dd data-o="sev">—</dd></div>
+	</dl>
+
+	<p class="dka-note">
+		Herramienta de apoyo a la decisión, no reemplaza el juicio clínico.
+		Fórmulas de referencia (ADA); verificar contra el protocolo local.
+	</p>
+</div>
+
+<style>
+	.dka-calc {
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.5rem;
+		padding: 1rem;
+		margin: 1.5rem 0;
+	}
+	.dka-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+		gap: 0.75rem;
+	}
+	.dka-grid label {
+		display: flex;
+		flex-direction: column;
+		font-size: var(--sl-text-sm);
+		font-weight: 600;
+		gap: 0.25rem;
+	}
+	.dka-grid label span {
+		font-weight: 400;
+		color: var(--sl-color-gray-3);
+	}
+	.dka-grid input {
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.375rem;
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font: inherit;
+	}
+	.dka-out {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+		gap: 0.5rem 1rem;
+		margin: 1rem 0 0;
+	}
+	.dka-out div {
+		border-top: 1px solid var(--sl-color-gray-6);
+		padding-top: 0.5rem;
+	}
+	.dka-out dt {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+	.dka-out dd {
+		margin: 0;
+		font-size: var(--sl-text-lg);
+		font-weight: 600;
+	}
+	.dka-out dd[data-sev='grave'] { color: var(--sl-color-red-high); }
+	.dka-out dd[data-sev='moderada'] { color: var(--sl-color-orange-high); }
+	.dka-out dd[data-sev='leve'] { color: var(--sl-color-green-high); }
+	.dka-note {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		margin: 0.75rem 0 0;
+	}
+</style>
+
+<script>
+	// Lógica cliente. Se cablea cada instancia del componente presente en la
+	// página de forma independiente.
+	function initDka(root: HTMLElement) {
+		const field = (n: string) =>
+			root.querySelector<HTMLInputElement>(`[data-f="${n}"]`);
+		const out = (n: string) =>
+			root.querySelector<HTMLElement>(`[data-o="${n}"]`);
+
+		const num = (el: HTMLInputElement | null) => {
+			const v = el ? parseFloat(el.value) : NaN;
+			return Number.isFinite(v) ? v : null;
+		};
+		const fmt = (v: number, d = 1) =>
+			v.toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+		function recompute() {
+			const glucosa = num(field('glucosa'));
+			const ph = num(field('ph'));
+			const hco3 = num(field('hco3'));
+			const na = num(field('na'));
+			const cl = num(field('cl'));
+
+			// Sodio corregido (Katz): Na + 1.6 * ((glucosa - 100) / 100)
+			const naCorrEl = out('naCorr');
+			if (naCorrEl)
+				naCorrEl.textContent =
+					na !== null && glucosa !== null
+						? `${fmt(na + 1.6 * ((glucosa - 100) / 100))} mEq/L`
+						: '—';
+
+			// Anion gap: Na - (Cl + HCO3)
+			const agEl = out('ag');
+			if (agEl)
+				agEl.textContent =
+					na !== null && cl !== null && hco3 !== null
+						? `${fmt(na - (cl + hco3))} mEq/L`
+						: '—';
+
+			// Osmolalidad efectiva: 2*Na + glucosa/18
+			const osmEl = out('osm');
+			if (osmEl)
+				osmEl.textContent =
+					na !== null && glucosa !== null
+						? `${fmt(2 * na + glucosa / 18)} mOsm/kg`
+						: '—';
+
+			// Severidad DKA (ADA), por pH y HCO3. Se toma la categoría más grave
+			// entre ambos criterios cuando difieren.
+			const sevEl = out('sev');
+			if (sevEl) {
+				let sev: string | null = null;
+				const rank = { leve: 1, moderada: 2, grave: 3 } as const;
+				const byPh =
+					ph === null ? null : ph < 7.0 ? 'grave' : ph < 7.25 ? 'moderada' : ph <= 7.3 ? 'leve' : null;
+				const byHco3 =
+					hco3 === null ? null : hco3 < 10 ? 'grave' : hco3 < 15 ? 'moderada' : hco3 <= 18 ? 'leve' : null;
+				for (const c of [byPh, byHco3]) {
+					if (c && (!sev || rank[c as keyof typeof rank] > rank[sev as keyof typeof rank])) sev = c;
+				}
+				sevEl.textContent = sev ? sev[0].toUpperCase() + sev.slice(1) : '—';
+				if (sev) sevEl.setAttribute('data-sev', sev);
+				else sevEl.removeAttribute('data-sev');
+			}
+		}
+
+		root.addEventListener('input', recompute);
+		recompute();
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-dka]').forEach(initDka);
+</script>
