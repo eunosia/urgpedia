@@ -1,40 +1,43 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: URGpedia
+description: Manual de protocolos clínicos de urgencias de la red Andes Salud.
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  tagline: Manual de protocolos clínicos de urgencias de la red Andes Salud.
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Protocolos clínicos
+      link: /protocolos-clinicos/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
+    - text: Calculadoras
+      link: /calculadoras/
+      icon: open-book
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+:::note[Portada provisional]
+Esta es una portada mínima de andamiaje. El contenido real de los protocolos
+no se versiona en este repositorio: se trae desde el repositorio de contenido
+en cada build. En desarrollo, ejecuta `npm run content:sync` antes de
+`npm run dev`. Hasta entonces, las secciones del sidebar aparecen vacías.
+:::
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+<CardGrid>
+	<Card title="Protocolos clínicos" icon="document">
+		Protocolos por grupo etario, patología y presentación clínica, según el
+		marco del Decreto 34 (MINSAL).
 	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
+	<Card title="Calculadoras" icon="rocket">
+		Herramientas de apoyo a la decisión clínica integradas en la página del
+		protocolo correspondiente.
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="Marco legal y operativo" icon="approve-check">
+		Ley de Urgencia, normativa y protocolos operativos y de calidad del
+		servicio.
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="Novedades" icon="list-format">
+		Cambios de protocolo publicados en el blog, con aviso de severidad para
+		distinguir un ajuste menor de un cambio de práctica.
 	</Card>
 </CardGrid>
