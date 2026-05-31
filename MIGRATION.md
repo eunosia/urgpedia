@@ -17,13 +17,19 @@ El piloto define el patrón; el resto se porta en cola siguiendo el mismo molde.
 | Protocolo | Estado | Calculadora asociada |
 |---|---|---|
 | Cetoacidosis diabética (DKA) | **Piloto** (patrón validado) | `DkaCalculator.astro` |
-| Shock séptico | En cola | Por definir (p. ej. cálculo de fluidos, qSOFA) |
+| Shock séptico | **Portado** (2.º; patrón estabilizado) | `SepsisCalculator.astro` (qSOFA, PAM, bolo) |
 | Síndrome coronario agudo (SCA) | En cola | Por definir (p. ej. score de riesgo) |
 | Ataque cerebrovascular (ACV) | En cola | Por definir (p. ej. ventana, NIHSS) |
 | Tromboembolismo pulmonar (TEP) | En cola | Por definir (p. ej. Wells, PESI) |
 
 > El inventario completo (50–80 archivos) se levanta desde el repo de contenido
-> al ejecutar la migración. Aquí se listan solo los de la primera cola.
+> al ejecutar la migración. Aquí se listan solo los de la primera cola. Con DKA
+> (piloto) y shock séptico (segundo) el patrón queda estabilizado: SCA, ACV y
+> TEP se portan con el mismo molde.
+>
+> **Validación clínica pendiente** en ambas calculadoras: el mantenedor debe
+> validar fórmulas, umbrales y dosis (en especial el bolo de 30 mL/kg de shock
+> séptico) contra el protocolo local antes de publicar.
 
 ---
 
@@ -106,8 +112,30 @@ Patrón validado con el piloto DKA:
 4. Las calculadoras son **piloto**: las fórmulas requieren validación clínica y
    verificación contra el protocolo local antes de producción.
 
-> La página de muestra del piloto vive solo en local (está en `.gitignore`) y no
-> se versiona en el repo del sitio. El contenido real llega por `content:sync`.
+#### Shell común (generalización)
+
+Al portar el segundo protocolo (shock séptico) se extrajo el shell visual
+compartido a **`src/components/calculators/calculator.css`** (clases `.calc-*` y
+severidad genérica por `data-level` = `high|mid|low`). En vez de duplicar
+estilos, cada calculadora importa ese CSS y aporta solo sus campos y fórmulas.
+
+- **Decisión deliberada**: la **lógica clínica NO se generaliza** en un motor
+  configurable; queda explícita y co-localizada en cada componente para que el
+  mantenedor la revise de forma aislada. Solo se comparte la presentación.
+- Cada calculadora mapea su categoría clínica al `data-level` del shell (p. ej.
+  DKA: grave→high; qSOFA: ≥2→high).
+
+Inventario de componentes de calculadora (en el repo del sitio):
+
+| Componente | Protocolo | Cálculos |
+|---|---|---|
+| `DkaCalculator.astro` | Cetoacidosis diabética | Sodio corregido, anion gap, osmolalidad efectiva, severidad ADA |
+| `SepsisCalculator.astro` | Shock séptico | PAM, qSOFA, bolo de cristaloides |
+| `calculator.css` | — (shell común) | Estilos y severidad por `data-level` |
+
+> Las páginas de muestra de DKA y shock séptico viven solo en local (están en
+> `.gitignore`) y no se versionan en el repo del sitio. El contenido real llega
+> por `content:sync`.
 
 ---
 
