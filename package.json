@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "content:sync": "bash scripts/content-sync.sh",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",

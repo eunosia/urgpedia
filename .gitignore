@@ -25,6 +25,16 @@ dist/
 .astro/
 .env.production
 
+# Contenido de protocolos: se trae por fetch desde el repo de contenido
+# (fuente de verdad) en cada build; NO se versiona en el repo del sitio.
+.content-cache/
+/src/content/docs/**
+# Conservar el andamiaje versionado: directorios de secciones, sus .gitkeep
+# y la portada provisional.
+!/src/content/docs/**/
+!/src/content/docs/index.mdx
+!/src/content/docs/**/.gitkeep
+
 # Backups locales
 backups/
 *.sql

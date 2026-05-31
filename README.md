@@ -2,7 +2,64 @@
 
 Plataforma de conocimiento clínico para los equipos de urgencia de la **red Andes Salud**. Arranca con la Clínica Andes Salud Puerto Montt (CASPM) y está diseñada para expandirse a las demás clínicas de la red.
 
-## Stack tecnológico
+---
+
+## Sitio Starlight (migración en curso)
+
+> Esta es la nueva aplicación del sitio, construida con **Astro + Starlight**.
+> Reemplaza a Wiki.js. Las secciones de operación de Wiki.js más abajo
+> documentan el **sistema heredado** que se retira al final de la migración.
+
+El sitio publica un manual de protocolos clínicos a partir de archivos Markdown.
+El contenido NO vive en este repositorio: es la fuente de verdad del repositorio
+de contenido `urgpedia-caspm-content` y se **trae por fetch** desde su rama
+`main` en cada build (sin submódulo, sin rama `published`).
+
+### Desarrollo local
+
+```bash
+npm install            # dependencias del sitio
+npm run content:sync   # trae los protocolos desde el repo de contenido
+npm run dev            # servidor de desarrollo en http://localhost:4321
+```
+
+Para una vista de producción:
+
+```bash
+npm run content:sync && npm run build && npm run preview
+```
+
+> **Clon en frío:** un clon recién hecho solo trae el andamiaje (portada
+> provisional y secciones vacías). El contenido real de los protocolos **no
+> aparece hasta ejecutar `npm run content:sync`**. El repo de contenido es
+> privado: `content:sync` necesita credenciales de lectura (ver
+> `docs/hosting-plan.md` para cómo se inyectan en el build del host).
+
+### Estructura del sitio
+
+```
+urgpedia/
+├── astro.config.mjs              # Config de Starlight (título, locale es, sidebar §N)
+├── src/
+│   ├── components/
+│   │   └── calculators/          # Calculadoras reutilizables (componentes Astro)
+│   └── content/
+│       └── docs/                 # Contenido: andamiaje versionado + contenido
+│                                 #   sincronizado (este último en .gitignore)
+├── scripts/content-sync.sh       # Fetch del contenido en build/local
+├── MIGRATION.md                  # Inventario y patrón de portado desde Wiki.js
+└── docs/
+    ├── auth-plan.md              # Autenticación de lectores (Cloudflare Access)
+    ├── hosting-plan.md           # Hosting (Cloudflare Pages + Access)
+    └── keystatic-opcional.md     # Editor visual opcional (a futuro)
+```
+
+El contenido sincronizado está en `.gitignore`; solo se versiona el andamiaje
+(portada `index.mdx` y los `.gitkeep` de cada sección).
+
+---
+
+## Stack tecnológico (sistema heredado — Wiki.js)
 
 | Componente | Tecnología |
 |---|---|
