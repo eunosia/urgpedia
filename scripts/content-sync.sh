@@ -48,14 +48,29 @@ fi
 
 echo "[content:sync] repo=${CONTENT_REPO} rama=${CONTENT_BRANCH} subdir=${CONTENT_SUBDIR}"
 
+# Mensaje accionable cuando git no puede acceder al repo. GitHub responde
+# "Repository not found" a un repo PRIVADO sin autenticar (oculta su existencia),
+# así que la causa típica en CI es la falta de CONTENT_TOKEN.
+auth_hint() {
+  echo "[content:sync] ERROR: no se pudo acceder a ${CONTENT_REPO} (rama ${CONTENT_BRANCH})." >&2
+  if [ -z "${CONTENT_TOKEN:-}" ]; then
+    echo "[content:sync] El repo de contenido es privado y NO hay CONTENT_TOKEN definido." >&2
+    echo "[content:sync] En CI/hosting define CONTENT_TOKEN con un PAT de SOLO LECTURA" >&2
+    echo "[content:sync] (Contents: Read) sobre el repo de contenido. Ver docs/DEPLOYMENT-STARLIGHT.md." >&2
+  else
+    echo "[content:sync] Hay CONTENT_TOKEN, pero git no pudo acceder: revisa que el token" >&2
+    echo "[content:sync] tenga permiso de lectura sobre ${CONTENT_REPO} y no esté expirado." >&2
+  fi
+}
+
 if [ -d "${CACHE_DIR}/.git" ]; then
   echo "[content:sync] actualizando caché existente"
-  git ${git_auth[@]+"${git_auth[@]}"} -C "${CACHE_DIR}" fetch --depth 1 origin "${CONTENT_BRANCH}"
+  git ${git_auth[@]+"${git_auth[@]}"} -C "${CACHE_DIR}" fetch --depth 1 origin "${CONTENT_BRANCH}" || { auth_hint; exit 1; }
   git -C "${CACHE_DIR}" reset --hard "origin/${CONTENT_BRANCH}"
 else
   echo "[content:sync] clonando contenido (shallow)"
   rm -rf "${CACHE_DIR}"
-  git ${git_auth[@]+"${git_auth[@]}"} clone --depth 1 --branch "${CONTENT_BRANCH}" "${CONTENT_REPO}" "${CACHE_DIR}"
+  git ${git_auth[@]+"${git_auth[@]}"} clone --depth 1 --branch "${CONTENT_BRANCH}" "${CONTENT_REPO}" "${CACHE_DIR}" || { auth_hint; exit 1; }
 fi
 
 mkdir -p "${DEST}"
