@@ -41,7 +41,13 @@ build necesita un token.
 
 ---
 
-## 2. Cloudflare Pages · [tú]
+## 2. Proyecto de build en Cloudflare · [tú]
+
+> **Nota.** Este sitio se desplegó como **Worker con assets estáticos** (build
+> conectado a Git + `wrangler deploy`, configurado por `wrangler.jsonc` en el
+> repo). El build (clone del contenido, `npm run build`) es idéntico al de un
+> proyecto Pages; lo que cambia es el deploy (sube `dist/` como assets) y la URL
+> (`*.workers.dev`, ya desactivada). Los pasos siguientes aplican igual.
 
 > **Rama de producción.** Tras el merge, `main` es el sitio Starlight (tiene
 > `package.json` y `astro.config.mjs`), así que la **Production branch** del
@@ -75,45 +81,51 @@ El contenido es interno; todo el sitio va tras login. Detalle en
 
 ---
 
-## 4. Cerrar las URL `*.pages.dev` — OBLIGATORIO · [tú]
+## 4. Cerrar la URL pública `*.workers.dev` — OBLIGATORIO · [código, hecho]
 
-Access protege los previews pero deja **pública** la URL de producción
-`<proyecto>.pages.dev`. Es una fuga equivalente a GitHub Pages.
+Este proyecto se desplegó como **Worker con assets estáticos** (`wrangler.jsonc`,
+`wrangler deploy`), no como Pages. Por defecto el Worker expone una URL pública
+`<worker>.workers.dev` (aquí `urgpedia.urg.workers.dev`) + Preview URLs por
+versión — fuga equivalente a la de `*.pages.dev`.
 
-- En la **cuenta** de Cloudflare, activa **"Require Access protection"**
-  (deny-by-default): bloquea cualquier hostname sin app de Access, incluida la
-  `*.pages.dev`.
-- Antes de activarlo, confirma que todos los hostnames legítimos ya tienen su
-  app de Access, para no cortar tráfico válido.
-- Es un ajuste de cuenta: coordina si la cuenta aloja otros proyectos.
+- **Resuelto en código**: `wrangler.jsonc` fija `workers_dev: false` y
+  `preview_urls: false`, así el deploy no expone ninguna URL pública. El sitio
+  solo se sirve por el dominio propio del paso 5, detrás de Access.
+- Defensa en profundidad opcional (cuenta): **"Require Access protection"**
+  (deny-by-default) bloquea cualquier hostname de tus zonas sin app de Access.
+  Confirma antes que todo hostname legítimo tenga su app, para no cortar tráfico.
 
 Referencia: `docs/hosting-plan.md` §3.3.
 
 ---
 
-## 5. DNS · [tú]
+## 5. Dominio propio · [tú]
 
-En el proyecto de Pages → **Custom domains** → añade `caspm.urgpedia.cl` y sigue
-la guía (registro CNAME/gestión en Cloudflare DNS).
+En el Worker `urgpedia` → **Settings → Domains & Routes** → **Add → Custom
+domain** → `caspm.urgpedia.cl`. Cloudflare crea el registro DNS (la zona
+`urgpedia.cl` debe estar en esta cuenta de Cloudflare). Con `workers.dev`
+desactivado, este es el único acceso al sitio.
 
 ---
 
 ## 6. Rebuild automático al publicar (cross-repo) · [tú + código]
 
 Publicar = mergear a `main` en el repo de **contenido**. Eso debe disparar el
-build del **sitio**:
+build del **sitio** (que vive en otro repo).
 
-1. En Cloudflare Pages → Settings → **Deploy hooks** → crea uno (te da una URL
-   secreta). Cópiala.
-2. En el repo **de contenido**, guarda esa URL como secret
-   `CF_PAGES_DEPLOY_HOOK` (Settings → Secrets and variables → Actions).
-3. Añade al repo de contenido el workflow de ejemplo
-   [`docs/examples/content-repo-deploy.yml`](examples/content-repo-deploy.yml)
-   en `.github/workflows/deploy-site.yml`. En cada `push` a `main` llama al
-   deploy hook y reconstruye el sitio.
+El workflow de ejemplo [`docs/examples/content-repo-deploy.yml`](examples/content-repo-deploy.yml)
+va en el repo **de contenido** (`.github/workflows/deploy-site.yml`) y, en cada
+`push` a `main`, llama a un **deploy hook** del proyecto del sitio (guardado como
+secret `CF_PAGES_DEPLOY_HOOK`).
 
-> El workflow **vive en el repo de contenido**, no en este. Aquí se entrega como
-> ejemplo para pegar/PR-ear allá.
+- **Si el sitio fuera un proyecto Pages**: el deploy hook se crea en
+  Settings → Deploy hooks.
+- **Como es un Worker con build conectado a Git** (lo actual): usa el endpoint
+  de **Workers Builds** para disparar un build, o deja que el push al repo del
+  **sitio** lo gatille y que el del **contenido** haga un commit/redeploy. Si el
+  proyecto no expone un hook equivalente, alternativa simple: que el Action del
+  repo de contenido haga `repository_dispatch` al repo del sitio y este corra su
+  build. Confirmar el mecanismo disponible al configurarlo.
 
 ---
 
@@ -140,8 +152,10 @@ build del **sitio**:
 
 ## Verificación final
 
-- [ ] Build de Cloudflare Pages verde (trae contenido con `CONTENT_TOKEN`).
+- [x] Build de Cloudflare verde (trae contenido con `CONTENT_TOKEN`, 142 páginas).
+- [x] Deploy verde (`wrangler deploy` sube `dist/` como assets estáticos).
+- [x] URL pública `*.workers.dev` desactivada (`wrangler.jsonc`).
+- [ ] `caspm.urgpedia.cl` agregado como dominio propio del Worker.
 - [ ] `caspm.urgpedia.cl` pide login (Access OTP) y luego muestra el sitio.
-- [ ] `<proyecto>.pages.dev` **bloqueado** (Require Access protection activo).
 - [ ] Merge a `main` del repo de contenido dispara un nuevo deploy.
 - [ ] Paridad con Wiki.js validada antes de migrar el DNS.
