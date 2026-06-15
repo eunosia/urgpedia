@@ -1,8 +1,8 @@
 # Despliegue del sitio Starlight
 
 Checklist para poner en producción el sitio Astro Starlight que reemplaza a
-Wiki.js. La guía legacy de Wiki.js (Oracle + Auth0 + Caddy) vive en
-`docs/DEPLOYMENT.md`; esta es la del sitio nuevo.
+Wiki.js. La implementación heredada de Wiki.js (Oracle + Auth0 + Caddy) fue
+retirada del repo y queda preservada en la etiqueta git `wikijs-legacy`.
 
 Estado del repo del sitio: el contenido real **compila** (`npm run content:sync
 && npm run build`). Lo que falta es **infraestructura** (hosting, auth, CI),
@@ -43,18 +43,15 @@ build necesita un token.
 
 ## 2. Cloudflare Pages · [tú]
 
-> **IMPORTANTE — rama de producción.** El proyecto Starlight (con `package.json`
-> y `astro.config.mjs`) vive en `feat/starlight-migration`. La rama `main`
-> todavía es el repo **legacy de Wiki.js** y **no tiene** `package.json`. Si
-> Pages construye `main`, el build falla con
-> `npm error enoent ... package.json` (ver Troubleshooting). Mientras no se haga
-> el cutover, la **Production branch** del proyecto debe ser
-> `feat/starlight-migration`.
+> **Rama de producción.** Tras el merge, `main` es el sitio Starlight (tiene
+> `package.json` y `astro.config.mjs`), así que la **Production branch** del
+> proyecto debe ser `main`. Si Pages quedó apuntando a otra rama o a un commit
+> previo al merge sin `package.json`, el build falla con
+> `npm error enoent ... package.json` (ver Troubleshooting).
 
 1. Cloudflare Dashboard → **Workers & Pages** → Create → **Pages** → conectar a
    Git → repo `eunosia/urgpedia`.
-   - **Production branch**: `feat/starlight-migration` (no `main`, hasta el
-     cutover). Settings → Builds & deployments → Production branch.
+   - **Production branch**: `main` (ya contiene el sitio Starlight).
 2. Build settings:
    - **Framework preset**: Astro (o None).
    - **Build command**: `npm run content:sync && npm run build`
@@ -133,10 +130,10 @@ build del **sitio**:
 ## Troubleshooting
 
 - **`npm error enoent ... /opt/buildhome/repo/package.json`** — Pages está
-  construyendo una rama sin el proyecto Astro (típicamente `main`, que aún es el
-  repo legacy de Wiki.js). Cambia la **Production branch** a
-  `feat/starlight-migration` (Settings → Builds & deployments) y re-despliega.
-  Tras el cutover, cuando la rama se mergee a `main`, vuelve a apuntar a `main`.
+  construyendo una rama o commit sin el proyecto Astro (p. ej. un commit de
+  `main` previo al merge de la migración). Asegura que la **Production branch**
+  sea `main` ya con la migración mergeada (Settings → Builds & deployments) y
+  re-despliega.
 - **El build no encuentra el contenido / 0 protocolos** — falta `CONTENT_TOKEN`
   o no tiene permiso de lectura sobre el repo de contenido. Revisa la variable
   de entorno del proyecto (paso 2.3).
