@@ -47,12 +47,28 @@ mkdir -p "${DEST}"
 # Espeja el contenido hacia DEST. --delete mantiene DEST igual a la fuente,
 # pero se preservan los archivos de andamiaje versionados (portada e índices
 # .gitkeep de secciones) y nunca se copia el .git del repo de contenido.
+# Se excluyen también los archivos de meta del repo de contenido (README,
+# scripts de validación, CI, páginas de prueba/HTML de Wiki.js) que no son
+# protocolos publicables.
 echo "[content:sync] copiando a ${DEST}"
 rsync -a --delete \
   --exclude '.git' \
   --exclude 'index.mdx' \
+  --exclude 'temas.mdx' \
   --exclude '.gitkeep' \
   --exclude 'blog' \
+  --exclude 'README.md' \
+  --exclude 'intro-test.md' \
+  --exclude '*.html' \
+  --exclude 'docs' \
+  --exclude 'scripts' \
+  --exclude '.github' \
+  --exclude 'CODEOWNERS' \
   "${CACHE_DIR}/${CONTENT_SUBDIR}/" "${DEST}/"
+
+# Normaliza el frontmatter Wiki.js -> Starlight en el contenido ya copiado.
+# El repo de contenido NO se modifica; la transformación ocurre solo aquí.
+echo "[content:sync] normalizando frontmatter"
+node scripts/normalize-content.mjs "${DEST}"
 
 echo "[content:sync] listo"
