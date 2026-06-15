@@ -20,6 +20,12 @@
 #   CONTENT_SUBDIR  Subcarpeta del repo de contenido que contiene los .md
 #                   (por defecto: ".", la raíz). Ajustar si el contenido vive
 #                   en una subcarpeta (p. ej. "content" o "es").
+#   CONTENT_TOKEN   (Opcional) Token de SOLO LECTURA del repo de contenido
+#                   privado (PAT fine-grained con Contents: Read). Necesario en
+#                   CI/hosting, donde no hay credential helper. En local no hace
+#                   falta si git ya autentica por keychain/gh. El token se pasa
+#                   por header HTTP: NO se persiste en el .git del caché ni se
+#                   imprime en los logs.
 #
 set -euo pipefail
 
@@ -30,16 +36,26 @@ CONTENT_SUBDIR="${CONTENT_SUBDIR:-.}"
 CACHE_DIR=".content-cache"
 DEST="src/content/docs"
 
+# Auth opcional para repo privado. Si hay CONTENT_TOKEN, se inyecta como header
+# Authorization en cada operación de red (clone/fetch) sin guardarlo en disco.
+# `${git_auth[@]+...}` evita el error de "unbound variable" con array vacío.
+git_auth=()
+if [ -n "${CONTENT_TOKEN:-}" ]; then
+  token_b64=$(printf 'x-access-token:%s' "${CONTENT_TOKEN}" | base64 | tr -d '\n')
+  git_auth=(-c "http.extraHeader=Authorization: Basic ${token_b64}")
+  echo "[content:sync] usando CONTENT_TOKEN para autenticar (header)"
+fi
+
 echo "[content:sync] repo=${CONTENT_REPO} rama=${CONTENT_BRANCH} subdir=${CONTENT_SUBDIR}"
 
 if [ -d "${CACHE_DIR}/.git" ]; then
   echo "[content:sync] actualizando caché existente"
-  git -C "${CACHE_DIR}" fetch --depth 1 origin "${CONTENT_BRANCH}"
+  git ${git_auth[@]+"${git_auth[@]}"} -C "${CACHE_DIR}" fetch --depth 1 origin "${CONTENT_BRANCH}"
   git -C "${CACHE_DIR}" reset --hard "origin/${CONTENT_BRANCH}"
 else
   echo "[content:sync] clonando contenido (shallow)"
   rm -rf "${CACHE_DIR}"
-  git clone --depth 1 --branch "${CONTENT_BRANCH}" "${CONTENT_REPO}" "${CACHE_DIR}"
+  git ${git_auth[@]+"${git_auth[@]}"} clone --depth 1 --branch "${CONTENT_BRANCH}" "${CONTENT_REPO}" "${CACHE_DIR}"
 fi
 
 mkdir -p "${DEST}"
