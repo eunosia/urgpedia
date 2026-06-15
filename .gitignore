@@ -38,6 +38,9 @@ dist/
 # El blog de Novedades es del sitio (no contenido sincronizado): se versiona.
 !/src/content/docs/blog/**
 
+# Snapshot histórico de traspaso (no es parte del repo)
+/estado_actual.md
+
 # Backups locales
 backups/
 *.sql
