@@ -6,6 +6,12 @@
   // intente auto-configurar un adapter de servidor (lo que rompía el build).
   "name": "urgpedia",
   "compatibility_date": "2025-11-01",
+  // El contenido es interno (médicos): el sitio NO debe quedar público. Se
+  // desactiva la URL pública por defecto `*.workers.dev` y los Preview URLs.
+  // El acceso será solo por el dominio propio (caspm.urgpedia.cl) detrás de
+  // Cloudflare Access. Ver docs/DEPLOYMENT-STARLIGHT.md.
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "./dist",
     // Sirve dist/404.html para rutas no encontradas.
