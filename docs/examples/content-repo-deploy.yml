@@ -1,0 +1,36 @@
+# Ejemplo de workflow para el REPO DE CONTENIDO (urgpedia-caspm-content),
+# NO para el repo del sitio. Cópialo allá como:
+#   .github/workflows/deploy-site.yml
+#
+# Al mergear a `main` (acto de publicar), llama al Deploy Hook de Cloudflare
+# Pages para reconstruir y desplegar el sitio Starlight.
+#
+# Requisito: guardar la URL del deploy hook como secret `CF_PAGES_DEPLOY_HOOK`
+# en el repo de contenido (Settings → Secrets and variables → Actions).
+
+name: Desplegar sitio al publicar contenido
+
+on:
+  push:
+    branches: [main]
+
+# Evita despliegues solapados; deja correr el último.
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al Deploy Hook de Cloudflare Pages
+        env:
+          HOOK_URL: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "${HOOK_URL}" ]; then
+            echo "Falta el secret CF_PAGES_DEPLOY_HOOK" >&2
+            exit 1
+          fi
+          # -f hace fallar el step si el hook responde con error HTTP.
+          curl -fsS -X POST "${HOOK_URL}"
+          echo "Deploy del sitio disparado."

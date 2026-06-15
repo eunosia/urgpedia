@@ -237,11 +237,14 @@ Hay dos caminos para las calculadoras, y **conviven**:
 - **`.md` vs `.mdx`** — **resuelto** (§2.7): el contenido se queda en `.md`; las
   calculadoras embebidas pasan por *passthrough*. Solo las páginas que importan
   un componente nativo se hacen `.mdx`.
-- **Clon privado en build** — pendiente de despliegue: el repo de contenido es
-  privado; el build necesita credenciales de lectura (ver `docs/hosting-plan.md`).
-- **Despliegue** — pendiente (fuera de esta rama): hosting (Cloudflare Pages),
-  auth (Cloudflare Access) y CI que corra `content:sync` + `build` con el token
-  de lectura. Documentado en `docs/hosting-plan.md` y `docs/auth-plan.md`.
+- **Clon privado en build** — **resuelto en código**: `content-sync.sh` soporta
+  `CONTENT_TOKEN` (PAT de solo lectura), inyectado por header sin persistirlo en
+  disco. Falta solo crear el token y cargarlo como variable de entorno en el host.
+- **Despliegue** — pendiente (requiere servicios externos, fuera de esta rama):
+  hosting (Cloudflare Pages), auth (Cloudflare Access) y CI cross-repo. Checklist
+  paso a paso en `docs/DEPLOYMENT-STARLIGHT.md`; fondo en `docs/hosting-plan.md` y
+  `docs/auth-plan.md`. Workflow de deploy-hook de ejemplo en
+  `docs/examples/content-repo-deploy.yml`.
 - **Calculadoras nativas en cola**: definir fórmulas y validación clínica de
   SCA, ACV y TEP (DKA y shock séptico ya tienen componente piloto).
 
