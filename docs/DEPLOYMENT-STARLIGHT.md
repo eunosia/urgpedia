@@ -43,9 +43,18 @@ build necesita un token.
 
 ## 2. Cloudflare Pages · [tú]
 
+> **IMPORTANTE — rama de producción.** El proyecto Starlight (con `package.json`
+> y `astro.config.mjs`) vive en `feat/starlight-migration`. La rama `main`
+> todavía es el repo **legacy de Wiki.js** y **no tiene** `package.json`. Si
+> Pages construye `main`, el build falla con
+> `npm error enoent ... package.json` (ver Troubleshooting). Mientras no se haga
+> el cutover, la **Production branch** del proyecto debe ser
+> `feat/starlight-migration`.
+
 1. Cloudflare Dashboard → **Workers & Pages** → Create → **Pages** → conectar a
-   Git → repo `eunosia/urgpedia` → rama `feat/starlight-migration` (o `main`
-   tras el merge).
+   Git → repo `eunosia/urgpedia`.
+   - **Production branch**: `feat/starlight-migration` (no `main`, hasta el
+     cutover). Settings → Builds & deployments → Production branch.
 2. Build settings:
    - **Framework preset**: Astro (o None).
    - **Build command**: `npm run content:sync && npm run build`
@@ -120,6 +129,17 @@ build del **sitio**:
 4. **Retira Wiki.js** solo tras confirmar paridad.
 
 ---
+
+## Troubleshooting
+
+- **`npm error enoent ... /opt/buildhome/repo/package.json`** — Pages está
+  construyendo una rama sin el proyecto Astro (típicamente `main`, que aún es el
+  repo legacy de Wiki.js). Cambia la **Production branch** a
+  `feat/starlight-migration` (Settings → Builds & deployments) y re-despliega.
+  Tras el cutover, cuando la rama se mergee a `main`, vuelve a apuntar a `main`.
+- **El build no encuentra el contenido / 0 protocolos** — falta `CONTENT_TOKEN`
+  o no tiene permiso de lectura sobre el repo de contenido. Revisa la variable
+  de entorno del proyecto (paso 2.3).
 
 ## Verificación final
 
