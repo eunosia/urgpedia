@@ -1,7 +1,9 @@
 # Migración URGpedia: Wiki.js → Astro Starlight
 
-Estado: **preparación del terreno** (esta rama). No completa la migración.
-Valida el patrón con un protocolo piloto (DKA) y documenta auth y hosting.
+Estado: **contenido real compilando**. El sitio Starlight construye los **136
+protocolos reales** traídos por *fetch* desde el repo de contenido (142 páginas
+totales con índices, blog y páginas de tags). Falta solo el despliegue
+(hosting/auth/CI), documentado pero no instalado en esta rama.
 
 - Repo del **sitio** (este): la app Starlight que publica.
 - Repo de **contenido** (`urgpedia-caspm-content`): fuente de verdad de los
@@ -108,9 +110,11 @@ Patrón validado con el piloto DKA:
    <DkaCalculator />
    ```
 
-3. **La página que embebe un componente debe ser `.mdx`** (no `.md`).
-4. Las calculadoras son **piloto**: las fórmulas requieren validación clínica y
-   verificación contra el protocolo local antes de producción.
+3. **La página que importa un componente nativo debe ser `.mdx`** (no `.md`).
+   Las calculadoras embebidas de Wiki.js (`<script>` inline) siguen en `.md` por
+   *passthrough*; ver §2.7.
+4. Las calculadoras nativas son **piloto**: las fórmulas requieren validación
+   clínica y verificación contra el protocolo local antes de producción.
 
 #### Shell común (generalización)
 
@@ -133,9 +137,11 @@ Inventario de componentes de calculadora (en el repo del sitio):
 | `SepsisCalculator.astro` | Shock séptico | PAM, qSOFA, bolo de cristaloides |
 | `calculator.css` | — (shell común) | Estilos y severidad por `data-level` |
 
-> Las páginas de muestra de DKA y shock séptico viven solo en local (están en
-> `.gitignore`) y no se versionan en el repo del sitio. El contenido real llega
-> por `content:sync`.
+> Los componentes nativos viven en el repo del sitio y se versionan. Las páginas
+> de **muestra** que los embebían eran solo locales (gitignored) para validar el
+> render; `content:sync` con contenido real las reemplaza por los protocolos del
+> repo de contenido. Para volver a probar un componente nativo, crear una página
+> `.mdx` de muestra en local (no se commitea).
 
 ---
 
@@ -177,19 +183,67 @@ extendió con `blogSchema`, por lo que las páginas aceptan `tags:` en frontmatt
 
 ---
 
+## 2.7 Normalización en el sync (Wiki.js → Starlight)
+
+El repo de contenido es un **espejo bidireccional de Wiki.js** (Git Storage):
+su frontmatter es de Wiki.js y no compila con el esquema de Starlight. Como el
+repo de contenido es **read-only** (Wiki.js empuja directo a `main`), la
+adaptación ocurre **en el momento del sync**, no en el repo de contenido.
+
+`scripts/content-sync.sh` hace, después del `rsync`:
+
+1. **Excluye meta del repo de contenido**: `README.md`, `intro-test.md`,
+   `*.html`, `docs/`, `scripts/`, `.github/`, `CODEOWNERS` (no son protocolos).
+2. **Normaliza el frontmatter** con `scripts/normalize-content.mjs` (idempotente):
+   - `tags: "a, b, c"` (string Wiki.js) → `tags: [a, b, c]` (array Starlight).
+     Vacío → se omite.
+   - `title` / `description` → se re-emiten entre comillas (evita romper por `:`).
+   - `date` / `dateCreated` → `lastUpdated` (solo si parsean a fecha válida).
+   - Se **descartan** los campos propios de Wiki.js (`published`, `editor`,
+     `dateCreated`) y los bloques del RAG (`citas`, `dosis`, `calculadoras`),
+     que consume `eunosia-rag`, no el sitio.
+
+El **cuerpo** del documento queda intacto. El contenido sincronizado sigue sin
+versionarse en este repo (`.gitignore`); un clon en frío arranca vacío y el
+script lo llena.
+
+### Calculadoras embebidas (Wiki.js) vs componentes nativos
+
+Hay dos caminos para las calculadoras, y **conviven**:
+
+- **Embebidas en el contenido**: ~10 protocolos traen `<div data-calc="…">` +
+  `<script>` inline desde Wiki.js. En `.md` de Astro ese HTML/JS **pasa al
+  output y se ejecuta** en el navegador (verificado en el build). No requiere
+  `.mdx` ni cambios; siguen funcionando tal cual.
+- **Componentes nativos** (`src/components/calculators/`): para calculadoras
+  nuevas o reescritas con mejor UX/validación (DKA, shock séptico). Esas páginas
+  sí deben ser `.mdx` para poder importar el componente.
+
+> Validación clínica: las calculadoras embebidas heredan las fórmulas de
+> Wiki.js (responsabilidad del autor clínico); las nativas requieren validación
+> del mantenedor antes de publicar (ver §1).
+
+---
+
 ## 3. Preguntas abiertas
 
-> Tags y orden de páginas quedaron **resueltos** en §2.6.
+> Tags, orden de páginas, estructura del repo y `.md`/`.mdx` quedaron
+> **resueltos** (§2.6 y §2.7).
 
-- **Estructura del repo de contenido**: confirmar si los `.md` están en la raíz
-  o en una subcarpeta (`CONTENT_SUBDIR` en `content-sync.sh`) y si conservan el
-  prefijo de locale `/es/`.
-- **Clon privado en build**: el repo de contenido es privado; el build necesita
-  credenciales de lectura (ver `docs/hosting-plan.md`).
-- **`.md` vs `.mdx`**: las páginas con calculadora deben ser `.mdx`. Definir si
-  se renombran en el repo de contenido o se transforman en el sync.
-- **Calculadoras en cola**: definir fórmulas y validación clínica de shock
-  séptico, SCA, ACV y TEP.
+- **Estructura del repo de contenido** — **resuelto**: los `.md` viven en la
+  raíz con subcarpetas por sección (`protocolos-clinicos/por-presentacion/…`),
+  sin prefijo de locale `/es/`. `CONTENT_SUBDIR="."`. Cada sección tiene además
+  un `.md` de portada (`calculadoras.md`, `el-servicio.md`, …).
+- **`.md` vs `.mdx`** — **resuelto** (§2.7): el contenido se queda en `.md`; las
+  calculadoras embebidas pasan por *passthrough*. Solo las páginas que importan
+  un componente nativo se hacen `.mdx`.
+- **Clon privado en build** — pendiente de despliegue: el repo de contenido es
+  privado; el build necesita credenciales de lectura (ver `docs/hosting-plan.md`).
+- **Despliegue** — pendiente (fuera de esta rama): hosting (Cloudflare Pages),
+  auth (Cloudflare Access) y CI que corra `content:sync` + `build` con el token
+  de lectura. Documentado en `docs/hosting-plan.md` y `docs/auth-plan.md`.
+- **Calculadoras nativas en cola**: definir fórmulas y validación clínica de
+  SCA, ACV y TEP (DKA y shock séptico ya tienen componente piloto).
 
 ---
 
