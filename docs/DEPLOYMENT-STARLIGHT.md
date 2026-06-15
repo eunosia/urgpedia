@@ -111,21 +111,24 @@ desactivado, este es el único acceso al sitio.
 ## 6. Rebuild automático al publicar (cross-repo) · [tú + código]
 
 Publicar = mergear a `main` en el repo de **contenido**. Eso debe disparar el
-build del **sitio** (que vive en otro repo).
+build del **sitio** (que vive en otro repo). Workers Builds expone **Deploy
+Hooks** (GA desde abril 2026): una URL que, al recibir un `POST`, lanza un build.
 
-El workflow de ejemplo [`docs/examples/content-repo-deploy.yml`](examples/content-repo-deploy.yml)
-va en el repo **de contenido** (`.github/workflows/deploy-site.yml`) y, en cada
-`push` a `main`, llama a un **deploy hook** del proyecto del sitio (guardado como
-secret `CF_PAGES_DEPLOY_HOOK`).
+1. **Crear el Deploy Hook** (en el Worker del sitio): Workers & Pages → Worker
+   `urgpedia` → **Settings → Builds → Deploy Hooks** → nombre + rama **`main`** →
+   **Create** → copia la URL. Trátala como secreto (la URL es la credencial:
+   cualquiera con ella puede disparar builds).
+2. **Guardar el secret** en el repo **de contenido**: Settings → Secrets and
+   variables → Actions → `CF_DEPLOY_HOOK` = la URL.
+3. **Añadir el workflow** de ejemplo
+   [`docs/examples/content-repo-deploy.yml`](examples/content-repo-deploy.yml)
+   al repo de contenido en `.github/workflows/deploy-site.yml`. En cada `push` a
+   `main` hace `POST` al hook y reconstruye el sitio (que trae el contenido
+   fresco por `content:sync`).
 
-- **Si el sitio fuera un proyecto Pages**: el deploy hook se crea en
-  Settings → Deploy hooks.
-- **Como es un Worker con build conectado a Git** (lo actual): usa el endpoint
-  de **Workers Builds** para disparar un build, o deja que el push al repo del
-  **sitio** lo gatille y que el del **contenido** haga un commit/redeploy. Si el
-  proyecto no expone un hook equivalente, alternativa simple: que el Action del
-  repo de contenido haga `repository_dispatch` al repo del sitio y este corra su
-  build. Confirmar el mecanismo disponible al configurarlo.
+> El workflow **vive en el repo de contenido**, no en este. Aquí se entrega como
+> ejemplo para pegar/PR-ear allá. Workers Builds **deduplica** disparos en
+> ráfaga y limita a 10 builds/min por Worker.
 
 ---
 

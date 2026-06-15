@@ -3,10 +3,16 @@
 #   .github/workflows/deploy-site.yml
 #
 # Al mergear a `main` (acto de publicar), llama al Deploy Hook de Cloudflare
-# Pages para reconstruir y desplegar el sitio Starlight.
+# Workers Builds para reconstruir y desplegar el sitio Starlight (que vive en
+# el repo del sitio y trae este contenido por fetch en el build).
 #
-# Requisito: guardar la URL del deploy hook como secret `CF_PAGES_DEPLOY_HOOK`
-# en el repo de contenido (Settings → Secrets and variables → Actions).
+# Requisitos previos:
+#  1. El Worker del sitio debe tener el build conectado a Git (Workers Builds).
+#  2. Crear el Deploy Hook: Workers & Pages → Worker `urgpedia` → Settings →
+#     Builds → Deploy Hooks → nombre + rama `main` → Create → copiar la URL.
+#  3. Guardar esa URL como secret `CF_DEPLOY_HOOK` en ESTE repo de contenido
+#     (Settings → Secrets and variables → Actions). La URL es la credencial:
+#     trátala como secreto (cualquiera con la URL puede disparar builds).
 
 name: Desplegar sitio al publicar contenido
 
@@ -14,7 +20,8 @@ on:
   push:
     branches: [main]
 
-# Evita despliegues solapados; deja correr el último.
+# Evita disparos solapados; deja el último. (Workers Builds además deduplica
+# en su lado si llegan varios antes de que arranque el build.)
 concurrency:
   group: deploy-site
   cancel-in-progress: true
@@ -23,14 +30,14 @@ jobs:
   trigger-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamar al Deploy Hook de Cloudflare Pages
+      - name: Disparar el Deploy Hook de Workers Builds
         env:
-          HOOK_URL: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+          HOOK_URL: ${{ secrets.CF_DEPLOY_HOOK }}
         run: |
           if [ -z "${HOOK_URL}" ]; then
-            echo "Falta el secret CF_PAGES_DEPLOY_HOOK" >&2
+            echo "Falta el secret CF_DEPLOY_HOOK" >&2
             exit 1
           fi
           # -f hace fallar el step si el hook responde con error HTTP.
           curl -fsS -X POST "${HOOK_URL}"
-          echo "Deploy del sitio disparado."
+          echo "Build del sitio disparado."
