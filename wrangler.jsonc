@@ -1,0 +1,14 @@
+{
+  // Despliegue del sitio como ASSETS ESTÁTICOS en Cloudflare Workers.
+  // El sitio es 100% estático (Astro output: "static", páginas prerenderizadas):
+  // NO usa el adapter @astrojs/cloudflare ni SSR. Esta config hace que
+  // `wrangler deploy` solo suba el contenido de ./dist y evita que wrangler
+  // intente auto-configurar un adapter de servidor (lo que rompía el build).
+  "name": "urgpedia",
+  "compatibility_date": "2025-11-01",
+  "assets": {
+    "directory": "./dist",
+    // Sirve dist/404.html para rutas no encontradas.
+    "not_found_handling": "404-page"
+  }
+}

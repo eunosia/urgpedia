@@ -25,6 +25,9 @@ dist/
 .astro/
 .env.production
 
+# Wrangler (estado local del deploy a Cloudflare)
+.wrangler/
+
 # Contenido de protocolos: se trae por fetch desde el repo de contenido
 # (fuente de verdad) en cada build; NO se versiona en el repo del sitio.
 .content-cache/
